@@ -15,7 +15,8 @@ public class KinectMeasureTest {
 
       Object lock = new Object();
       synchronized (lock) {
-         lock.wait(20000);
+         //lock.wait(20000);
+         lock.wait();
       }
       
       Kinect.shutdown();

@@ -149,8 +149,25 @@ public class KinectMeasureFrame extends JFrame {
       SELECTING,
       SELECTED
    }
+   
+   class PixelProbe implements MouseMotionListener {
+
+      @Override
+      public void mouseDragged(MouseEvent e) {
+      }
+
+      @Override
+      public void mouseMoved(MouseEvent e) {
+         Point p = e.getPoint();
+         //float distance = depthViewer.getDistanceTo(p.x,p.y);
+         Point3d q = depthViewer.getWorldLocation(p.x,p.y);
+         System.out.format("(%d,%d) => (%f,%f,%f)\n", p.x,p.y,q.x,q.y,q.z);
+      }
+   }
+
 
    class SelectionCanvas extends JPanel{
+      
       
       
       class LineSelector extends JComponent implements MouseListener, MouseMotionListener {
@@ -199,7 +216,15 @@ public class KinectMeasureFrame extends JFrame {
          }
          
          void updateLength(){
-            float length = (float) (100f + Math.random()*10);
+            //float length = (float) (100f + Math.random()*10);
+            
+            
+            Point3d p1 = depthViewer.getWorldLocation(from.x,from.y);
+            Point3d p2 = depthViewer.getWorldLocation(to.x,to.y);
+            
+            double length = Math.sqrt((p1.x - p2.x)*(p1.x - p2.x)+(p1.y - p2.y)*(p1.y - p2.y)+(p1.z - p2.z)*(p1.z - p2.z));
+            
+            
             lengthLabel.setText(""+length);
             lengthLabel.setSize(lengthLabel.getPreferredSize());
             
@@ -223,15 +248,16 @@ public class KinectMeasureFrame extends JFrame {
                mode = Mode.SELECTING;
                from = e.getPoint();
                to = e.getPoint();
-               setCursor(new Cursor(Cursor.CROSSHAIR_CURSOR));
+               SelectionCanvas.this.setCursor(new Cursor(Cursor.CROSSHAIR_CURSOR));
             }else if (mode == Mode.SELECTING){
                mode = Mode.SELECTED;
-               to = e.getPoint();               
+               to = e.getPoint();   
+               SelectionCanvas.this.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
             }else if (mode == Mode.SELECTED){
                mode = Mode.SELECTING;
                from = e.getPoint();
                to = e.getPoint();
-               setCursor(Cursor.getDefaultCursor());
+               SelectionCanvas.this.setCursor(new Cursor(Cursor.CROSSHAIR_CURSOR));
             }
             repaint();
          }
@@ -285,6 +311,7 @@ public class KinectMeasureFrame extends JFrame {
 
       
       LineSelector selector = new LineSelector();
+      PixelProbe probe = new PixelProbe();
       
       KinectViewer viewer_ = null;
       void setViewer(KinectViewer viewer){
@@ -323,7 +350,7 @@ public class KinectMeasureFrame extends JFrame {
          
          addMouseListener(selector);
          addMouseMotionListener(selector);
-         
+         addMouseMotionListener(probe);
          
       }
       

@@ -26,9 +26,29 @@ import javax.swing.JComponent;
 
 class DepthViewer extends KinectViewer {
    
+   class F_ {
+//      double fx = 4.8378065692480374e+02;
+//      double fy = 4.8064891800790127e+02;
+//      double cx = 3.5888505420667735e+02;
+//      double cy = 2.4766889087469457e+02;
+      
+      double fx = 5.6915669033277982e+02;
+      double fy = 5.7156824112896481e+02;
+      double cx = 3.1426974666578479e+02;
+      double cy = 2.5447067453656601e+02;
+
+   };
+   F_ F = new F_();
+   
+   
    boolean ready = false;
    
    BufferedImage image;
+   
+   int getDepth(int x, int y){
+      int i = x*2 + y*640*2;
+      return buffer[i] + buffer[i+1]*256;
+   }
    
    public DepthViewer(File imageFile) throws IOException{
       image = ImageIO.read(imageFile);  
@@ -60,7 +80,21 @@ class DepthViewer extends KinectViewer {
       RescaleOp op = new RescaleOp(200f,0f,null);
       g2d.drawImage(image,op,0,0);
       
-      //g2d.drawImage(image,0,0,null);
+//      g2d.drawImage(image,0,0,null);
+   }
+   
+   public Point3d getWorldLocation(int x, int y){
+      
+      double wz = getDistanceTo(x,y)*0.01;
+      //double wz = distance * 0.01; // centimeter to meter               
+      double wx = (x - F.cx) * wz / F.fx;
+      double wy = (y - F.cy) * wz / F.fy;      
+      return new Point3d(wx,wy,wz);
+   }
+
+   public float getDistanceTo(int x, int y) {
+      int depthValue = getDepth(x,y);
+      return Kinect.depthToDistanceInCentimeters(depthValue);
    }
    
 }
