@@ -12,6 +12,7 @@ import org.openkinect.freenect.DepthHandler;
 import org.openkinect.freenect.Device;
 import org.openkinect.freenect.Freenect;
 import org.openkinect.freenect.LogLevel;
+import org.openkinect.freenect.TiltStatus;
 import org.openkinect.freenect.VideoFormat;
 import org.openkinect.freenect.VideoHandler;
 import org.openkinect.freenect.util.Jdk14LogHandler;
@@ -26,7 +27,9 @@ public class Kinect {
    static void start(){
       ctx = Freenect.createContext();
       ctx.setLogHandler(new Jdk14LogHandler());
-      ctx.setLogLevel(LogLevel.SPEW);      
+      ctx.setLogLevel(LogLevel.FATAL);//LogLevel.INFO);
+      //ctx.setLogLevel(LogLevel.SPEW);      
+      
       if (ctx.numDevices() > 0) {
          dev = ctx.openDevice(0);
       } else {
@@ -41,6 +44,45 @@ public class Kinect {
             dev.close();
          }
       ctx.shutdown();
+   }
+   
+   
+   static void tiltUp(int amount_in_degrees){
+      dev.refreshTiltState();      
+      setTiltAngle((int)dev.getTiltAngle() + amount_in_degrees);
+   }
+   
+   static void tiltDown(int amount_in_degrees){
+      dev.refreshTiltState();
+      setTiltAngle((int)dev.getTiltAngle() - amount_in_degrees);
+   }
+   
+   
+   static void setTiltAngle(int degrees){
+      dev.refreshTiltState();
+      if (dev.getTiltAngle() >= (degrees - 2) && dev.getTiltAngle() <= (degrees + 2)) {
+         return;
+      }
+      
+      dev.setTiltAngle(degrees);
+
+//      while (dev.getTiltStatus() == TiltStatus.STOPPED) {
+//         dev.refreshTiltState();
+//      }
+//
+//      if (dev.getTiltStatus() == TiltStatus.MOVING) {
+//         while (dev.getTiltStatus() == TiltStatus.MOVING) {
+//            dev.refreshTiltState();
+//         }
+//      }
+//
+//      if (dev.getTiltStatus() == TiltStatus.STOPPED) {
+//         while (dev.getTiltAngle() < -32) {
+//            dev.refreshTiltState();
+//         }
+//      }
+      System.out.println("Tilt complete");
+
    }
 
    // TODO: don't restart video if another rgb viewer is created, instead, add it to the 
@@ -155,7 +197,7 @@ public class Kinect {
    static private void calculateLookup(){
       distancePixelsLookup = new float[2048];
       for(int i = 0; i < 2048; i++){
-         if(i > 1000) {
+         if (i > 1000) {
             distancePixelsLookup[i] = 0;
          } else {
             distancePixelsLookup[i] = rawToCentimeters(i);

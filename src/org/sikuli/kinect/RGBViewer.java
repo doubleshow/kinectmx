@@ -66,9 +66,9 @@ class RGBViewer extends KinectViewer {
    
    Point getImageLocationFromWorldLocation(Point3d w){
       double invZ = 1.0 / w.z;
-      int cx = (int) (w.x * F.fx * invZ + F.cx);
-      int cy = (int) (w.y * F.fy * invZ + F.cy);
-      return new Point(cx,cy);
+      int x = (int) (w.x * F.fx * invZ + F.cx);
+      int y = (int) (w.y * F.fy * invZ + F.cy);
+      return new Point(x,y);
    }
 
    BufferedImage getImage(){

@@ -47,7 +47,9 @@ class DepthViewer extends KinectViewer {
    
    int getDepth(int x, int y){
       int i = x*2 + y*640*2;
-      return buffer[i] + buffer[i+1]*256;
+      int low = ((int)buffer[i]) & 0xFF;
+      int high = ((int)buffer[i+1]) & 0xFF;
+      return low + high*256;
    }
    
    public DepthViewer(File imageFile) throws IOException{
@@ -79,9 +81,6 @@ class DepthViewer extends KinectViewer {
    public void paintComponent(Graphics g){
       super.paintComponent(g);
       Graphics2D g2d = (Graphics2D) g;
-      //ShortLookupTable blt = new ShortLookupTable(0, this.freenectTest.depthPixelsLookupFarWhite);
-      //LookupOp op = new LookupOp(blt, null);
-      //
       RescaleOp op = new RescaleOp(200f,0f,null);
       g2d.drawImage(image,op,0,0);
    }

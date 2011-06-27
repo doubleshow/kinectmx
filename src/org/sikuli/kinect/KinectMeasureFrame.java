@@ -42,19 +42,10 @@ public class KinectMeasureFrame extends JFrame {
    ControlPanel controlPanel = new ControlPanel();
    
    public static void main(String[] args){
-      Kinect.start();
-      
+      Kinect.start();      
       KinectMeasureFrame kf = new KinectMeasureFrame();
       kf.setVisible(true);
       kf.setDefaultCloseOperation(EXIT_ON_CLOSE);
-
-//      Object lock = new Object();
-//      synchronized (lock) {
-//         //lock.wait(20000);
-//         lock.wait();
-//      }
-//      
-//      Kinect.shutdown();
    }
    
    KinectMeasureFrame(){
@@ -69,8 +60,8 @@ public class KinectMeasureFrame extends JFrame {
       
       setSize(800,600);      
 
-      //selectionPanel = new SelectionCanvas(depthViewer);
-      selectionPanel = new SelectionCanvas(rgbViewer);
+      selectionPanel = new SelectionCanvas(depthViewer);
+//      selectionPanel = new SelectionCanvas(rgbViewer);
       
       getContentPane().setLayout(new GridBagLayout());
       GridBagConstraints c = new GridBagConstraints();
@@ -94,13 +85,43 @@ public class KinectMeasureFrame extends JFrame {
    class ControlPanel extends JPanel{
 
       JButton playPauseButton = new PlayPauseButton();
-      JButton clearButton = new ClaerButton();
+      JButton clearButton = new ClearButton();
+      JButton tiltUpButton = new TiltButton(TiltButton.UP);
+      JButton tiltDownButton = new TiltButton(TiltButton.DOWN);
       JCheckBox colorViewCheckBox = new ColorViewCheckBox();
       public ControlPanel(){
          
          add(playPauseButton);
          add(clearButton);
          add(colorViewCheckBox);
+         add(tiltUpButton);
+         add(tiltDownButton);
+      }
+      
+      class TiltButton extends JButton implements ActionListener{
+         final static int UP = 1;
+         final static int DOWN = 2;
+         
+         int direction_ = UP;
+         TiltButton(int direction){            
+            direction_ = direction;
+            if (direction == UP){
+               setText("Up");
+            }else{
+               setText("Down");
+            }
+            addActionListener(this);
+         }
+         
+         @Override
+         public void actionPerformed(ActionEvent e) {            
+            if (direction_ == UP){
+               Kinect.tiltUp(5);
+            }else{
+               Kinect.tiltDown(5);
+            }
+         }         
+
       }
       
       class ColorViewCheckBox extends JCheckBox  implements ItemListener {
@@ -115,8 +136,8 @@ public class KinectMeasureFrame extends JFrame {
          }
       }
       
-      class ClaerButton extends JButton implements ActionListener {
-         public ClaerButton(){
+      class ClearButton extends JButton implements ActionListener {
+         public ClearButton(){
             super("Clear");
             addActionListener(this);
          }
@@ -172,9 +193,9 @@ public class KinectMeasureFrame extends JFrame {
       @Override
       public void mouseMoved(MouseEvent e) {
          Point p = e.getPoint();
-         //float distance = depthViewer.getDistanceTo(p.x,p.y);
+         int d = depthViewer.getDepth(p.x, p.y);
          Point3d q = depthViewer.getWorldLocation(p.x,p.y);
-         System.out.format("(%d,%d) => (%f,%f,%f)\n", p.x,p.y,q.x,q.y,q.z);
+         System.out.format("(%d,%d) (%d) => (%f,%f,%f)\n", p.x,p.y,d,q.x,q.y,q.z);
       }
    }
 
@@ -198,7 +219,6 @@ public class KinectMeasureFrame extends JFrame {
             lengthLabel.setBackground(Color.yellow);
             Border b1 = BorderFactory.createEmptyBorder(3,3,3,3);
             Border b2 = BorderFactory.createLineBorder(Color.black);
-            //lengthLabel.setBorder(BorderFactory.createEmptyBorder(3,3,3,3));
             lengthLabel.setBorder(BorderFactory.createCompoundBorder(b2,b1));
          }
          
