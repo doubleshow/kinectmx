@@ -26,38 +26,51 @@ import java.awt.geom.Ellipse2D;
 import java.io.File;
 import java.io.IOException;
 
+import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.border.Border;
 
 public class KinectMeasureFrame extends JFrame {
    
-   KinectViewer rgbViewer;
+   CalibratedDepthViewer rgbViewer;
    DepthViewer depthViewer;
    ControlPanel controlPanel = new ControlPanel();
+   
+   public static void main(String[] args){
+      Kinect.start();
+      
+      KinectMeasureFrame kf = new KinectMeasureFrame();
+      kf.setVisible(true);
+      kf.setDefaultCloseOperation(EXIT_ON_CLOSE);
+
+//      Object lock = new Object();
+//      synchronized (lock) {
+//         //lock.wait(20000);
+//         lock.wait();
+//      }
+//      
+//      Kinect.shutdown();
+   }
    
    KinectMeasureFrame(){
       
       setTitle("Kinect Measurer");
       
-      rgbViewer = Kinect.createRGBViewer();
+      RGBViewer tmprgbViewer = Kinect.createRGBViewer();
+      //rgbViewer = Kinect.createDepthViewer();
+      rgbViewer = Kinect.createCalibratedDepthViewer();
+      rgbViewer.setRGBViewer(tmprgbViewer);
       depthViewer = Kinect.createDepthViewer();
       
       setSize(800,600);      
-//      try {
-//         rgbViewer = new RGBViewer(new File("color.png"));
-//         depthViewer = new DepthViewer(new File("depth.png"));
-//         rgbViewer.setPreferredSize(new Dimension(640,480));
-//         depthViewer.setPreferredSize(new Dimension(640,480));
-//      } catch (IOException e) {
-//         
-//      }
-      
-      selectionPanel = new SelectionCanvas(depthViewer);
-      
+
+      //selectionPanel = new SelectionCanvas(depthViewer);
+      selectionPanel = new SelectionCanvas(rgbViewer);
       
       getContentPane().setLayout(new GridBagLayout());
       GridBagConstraints c = new GridBagConstraints();
@@ -124,13 +137,13 @@ public class KinectMeasureFrame extends JFrame {
 
          @Override
          public void actionPerformed(ActionEvent e) {
-            if (getText() == "Pause"){
-               
-               selectionPanel.viewer_.setPaused(true);               
-               setText("Play");               
-               
+            if (getText().equals("Pause")){
+               rgbViewer.setPaused(true);
+               depthViewer.setPaused(true);               
+               setText("Play");                              
             }else{
-               selectionPanel.viewer_.setPaused(false);            
+               rgbViewer.setPaused(false);
+               depthViewer.setPaused(false);
                setText("Pause");
             }
          }
@@ -182,7 +195,11 @@ public class KinectMeasureFrame extends JFrame {
             setLayout(null);
             add(lengthLabel);
             lengthLabel.setOpaque(true);
-            lengthLabel.setBackground(Color.white);
+            lengthLabel.setBackground(Color.yellow);
+            Border b1 = BorderFactory.createEmptyBorder(3,3,3,3);
+            Border b2 = BorderFactory.createLineBorder(Color.black);
+            //lengthLabel.setBorder(BorderFactory.createEmptyBorder(3,3,3,3));
+            lengthLabel.setBorder(BorderFactory.createCompoundBorder(b2,b1));
          }
          
          public void clear() {
@@ -225,7 +242,8 @@ public class KinectMeasureFrame extends JFrame {
             double length = Math.sqrt((p1.x - p2.x)*(p1.x - p2.x)+(p1.y - p2.y)*(p1.y - p2.y)+(p1.z - p2.z)*(p1.z - p2.z));
             
             
-            lengthLabel.setText(""+length);
+            
+            lengthLabel.setText(String.format("%.4f",length) + "(m)");
             lengthLabel.setSize(lengthLabel.getPreferredSize());
             
             Point o = new Point();

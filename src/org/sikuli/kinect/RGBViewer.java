@@ -17,8 +17,27 @@ import java.io.IOException;
 
 import javax.imageio.ImageIO;
 
+import org.sikuli.kinect.DepthViewer.F_;
+
 class RGBViewer extends KinectViewer {
 
+   class F_ {
+
+      double fx;
+      double fy;
+      double cx;
+      double cy;
+
+      F_(){
+         fx = 5.2504024783808677e+02;
+         fy = 5.2710595873970829e+02;
+         cx = 3.1828143764732971e+02;
+         cy = 2.5617267273960107e+02;
+      }
+
+
+   };
+   F_ F = new F_();
    
    public RGBViewer(File imageFile) throws IOException{
       image = ImageIO.read(imageFile);
@@ -43,6 +62,13 @@ class RGBViewer extends KinectViewer {
       super.paintComponent(g);
       Graphics2D g2d = (Graphics2D) g;
       g2d.drawImage(image,0,0,null);
+   }
+   
+   Point getImageLocationFromWorldLocation(Point3d w){
+      double invZ = 1.0 / w.z;
+      int cx = (int) (w.x * F.fx * invZ + F.cx);
+      int cy = (int) (w.y * F.fy * invZ + F.cy);
+      return new Point(cx,cy);
    }
 
    BufferedImage getImage(){

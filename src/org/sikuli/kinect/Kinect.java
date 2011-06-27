@@ -1,7 +1,10 @@
 package org.sikuli.kinect;
 
 import java.awt.image.DataBufferByte;
+import java.io.File;
+import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 
 import org.openkinect.freenect.Context;
 import org.openkinect.freenect.DepthFormat;
@@ -18,6 +21,8 @@ public class Kinect {
    static Context ctx;
    static Device dev;
 
+   static boolean isFake = false;
+   
    static void start(){
       ctx = Freenect.createContext();
       ctx.setLogHandler(new Jdk14LogHandler());
@@ -26,6 +31,7 @@ public class Kinect {
          dev = ctx.openDevice(0);
       } else {
          System.err.println("WARNING: No kinects detected, hardware tests will be implicitly passed.");
+         isFake = true;
       }   
    }
    
@@ -40,6 +46,17 @@ public class Kinect {
    // TODO: don't restart video if another rgb viewer is created, instead, add it to the 
    // existing handler
    static RGBViewer createRGBViewer(){
+      
+      if (isFake){
+         try {
+            return new RGBViewer(new File("color.png"));
+         } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+         }
+      }
+      
+      
       final RGBViewer rgbViewer = new RGBViewer();
       dev.startVideo(new VideoHandler() {
          @Override
@@ -51,17 +68,69 @@ public class Kinect {
       return rgbViewer;
    }
 
-   static DepthViewer createDepthViewer(){
-      final DepthViewer viewer = new DepthViewer();
-      dev.startDepth(new DepthHandler() {
-         @Override
-         public void onFrameReceived(DepthFormat format, ByteBuffer frame, int timestamp) {
-            viewer.update(frame);
-            viewer.repaint();
+   static ArrayList<DepthViewer> depthViewers = new ArrayList<DepthViewer>();
+   
+   static CalibratedDepthViewer createCalibratedDepthViewer(){
+      
+      if (isFake){
+         try {
+            return new CalibratedDepthViewer(new File("depth.png"));
+         } catch (IOException e) {
+            e.printStackTrace();
+            return null;
          }
-      });
+      }
+      
+      CalibratedDepthViewer viewer = new CalibratedDepthViewer();
+      if (depthViewers.size() == 0){     
+         dev.startDepth(new DepthHandler() {
+            @Override
+            public void onFrameReceived(DepthFormat format, ByteBuffer frame, int timestamp) {
+               for (DepthViewer viewer : depthViewers){
+                  viewer.update(frame);
+                  viewer.repaint();
+               }
+            }
+         });
+      }
+      
+      depthViewers.add(viewer);
+      
+      return viewer;
+   
+   }
+
+   static DepthViewer createDepthViewer(){
+      
+      if (isFake){
+         try {
+            return new DepthViewer(new File("depth.png"));
+         } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+         }
+      }
+
+      
+      DepthViewer viewer = new DepthViewer();
+      if (depthViewers.size() == 0){     
+         dev.startDepth(new DepthHandler() {
+            @Override
+            public void onFrameReceived(DepthFormat format, ByteBuffer frame, int timestamp) {
+               for (DepthViewer viewer : depthViewers){
+                  viewer.update(frame);
+                  viewer.repaint();
+               }
+            }
+         });
+      }
+      
+      depthViewers.add(viewer);
+      
       return viewer;
    }
+   
+   
 
    
    static float k1 = 0.1236f;

@@ -51,6 +51,11 @@ class DepthViewer extends KinectViewer {
    }
    
    public DepthViewer(File imageFile) throws IOException{
+      buffer = new byte[w*h*2];
+      for (int i=0;i<buffer.length;++i){
+         buffer[i]=0;
+      }
+
       image = ImageIO.read(imageFile);  
    }
    
@@ -79,14 +84,11 @@ class DepthViewer extends KinectViewer {
       //
       RescaleOp op = new RescaleOp(200f,0f,null);
       g2d.drawImage(image,op,0,0);
-      
-//      g2d.drawImage(image,0,0,null);
    }
    
    public Point3d getWorldLocation(int x, int y){
       
-      double wz = getDistanceTo(x,y)*0.01;
-      //double wz = distance * 0.01; // centimeter to meter               
+      double wz = getDistanceTo(x,y)*0.01;   // centimeter -> meter
       double wx = (x - F.cx) * wz / F.fx;
       double wy = (y - F.cy) * wz / F.fy;      
       return new Point3d(wx,wy,wz);
